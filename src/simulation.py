@@ -74,3 +74,59 @@ def simulate_gbm_paths(
     paths[:, 1:] = S0 * np.exp(cumulative_log_returns)
 
     return paths
+
+
+def simulate_gbm_terminal_prices(
+    S0: float,
+    r: float,
+    sigma: float,
+    T: float,
+    n_paths: int,
+    seed: int | None = None,
+) -> np.ndarray:
+    """
+    Simulate terminal stock prices using the closed-form solution
+    of Geometric Brownian Motion.
+
+    This is useful for European options, where the payoff depends
+    only on the final stock price at maturity.
+
+    Parameters
+    ----------
+    S0 : float
+        Initial stock price.
+    r : float
+        Risk-free interest rate.
+    sigma : float
+        Volatility of the stock.
+    T : float
+        Time to maturity, in years.
+    n_paths : int
+        Number of simulated terminal prices.
+    seed : int | None
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    np.ndarray
+        Simulated terminal stock prices with shape (n_paths,).
+    """
+    if S0 <= 0:
+        raise ValueError("S0 must be positive.")
+    if sigma < 0:
+        raise ValueError("sigma must be non-negative.")
+    if T <= 0:
+        raise ValueError("T must be positive.")
+    if n_paths <= 0:
+        raise ValueError("n_paths must be positive.")
+
+    rng = np.random.default_rng(seed)
+
+    random_shocks = rng.standard_normal(size=n_paths)
+
+    terminal_prices = S0 * np.exp(
+        (r - 0.5 * sigma**2) * T
+        + sigma * np.sqrt(T) * random_shocks
+    )
+
+    return terminal_prices
